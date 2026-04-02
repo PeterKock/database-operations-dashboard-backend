@@ -5,9 +5,20 @@ const router = Router();
 
 router.post("/simulate", async (req: Request, res: Response) => {
   try {
+    const {
+      jobName = "nightly-backup",
+      shouldFail = false,
+      durationSeconds = 5,
+    } = req.body || {};
+
     const startedAt = new Date();
-    const completedAt = new Date(startedAt.getTime() + 5000);
-    const durationSeconds = 5;
+    const completedAt = new Date(startedAt.getTime() + durationSeconds * 1000);
+
+    const status = shouldFail ? "FAILED" : "SUCCESS";
+
+    const message = shouldFail
+      ? "Backup failed due to simulated error"
+      : "Backup completed successfully";
 
     const query = `
       INSERT INTO backup_jobs (
@@ -23,12 +34,12 @@ router.post("/simulate", async (req: Request, res: Response) => {
     `;
 
     const values = [
-      "nightly-backup",
-      "SUCCESS",
+      jobName,
+      status,
       startedAt,
       completedAt,
       durationSeconds,
-      "Backup completed successfully"
+      message
     ];
 
     const result = await pool.query(query, values);
